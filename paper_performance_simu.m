@@ -35,7 +35,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 N_paths=6;%多径数量（含首径）
 Res_aoa=2;%多径角度间隔
-Res_tau0=[2,5]*1e-9;%时延间隔
+Res_tau0=[1,3,5]*1e-9;%时延间隔
 
 delta_f=120e3*8;%OFDM频率间隔
 N_fft=2048/8;%FFT点数
@@ -116,7 +116,7 @@ for idx=1:length(SNR)
                         %             Kvec=-2*pi/lamda*[(P_ue-P_bs(nbs,:))/norm(P_ue-P_bs(nbs,:));(cos(phi(:,nbs)).*cos(gama_H(nbs)+theta(2:end,nbs))) (cos(phi(:,nbs)).*sin(gama_H(nbs)+theta(2:end,nbs))) sin(phi(:,nbs))];
                         Kvec=-2*pi/lamda*[(P_ue-P_bs0(nbs,:))/norm(P_ue-P_bs0(nbs,:));(cos(gama_H(nbs)+theta(2:end,nbs))) (sin(gama_H(nbs)+theta(2:end,nbs))) zeros(N_paths-1,1)];
                         A(:,:,nbs)=exp(1j*(Kvec*D(:,:,nbs)).');
-                        F_alpha(:,nbs)=[1,0.5+0.6*rand(1,N_paths-1)];
+                        F_alpha(:,nbs)=[1,0.6+0.6*rand(1,N_paths-1)];
                         alpha=diag(F_alpha(:,nbs))*exp(1j*rand(N_paths,1)*2*pi);
 %                         if CFO_org
 %                             CFO=CFO_org*(2*rand(1,M)-1);
@@ -152,25 +152,26 @@ for idx=1:length(SNR)
 %                     if Qf~=1
                         %Musicdpd
                         [MusicP_ue,~,~]=fminsearch(@(P_ue2)Music_dpd(Us,X0(1:LenFreWindow),B,P_bs0,P_ue2,D,fn0(1:LenFreWindow),lamda),P_ue(1:2));
-                        MusiCerror0(simu_idx,kk2,kk1)=norm([MusicP_ue,4]-P_ue);
-                        
-                        %spotfi_Music
-                        [spotfi_tau,spotfi_Theta]=spotfi_estimator(Us,B,N_v,N_h,delta_f,tau0,theta,N_paths,gama_H);
+                        MusiCerror0(simu_idx,kk2,kk1)=norm([MusicP_ue,4]-P_ue);                        
 %                     else
                         %FastHRdpd
                         [FastHRP_ue,~,~]=fminsearch(@(P_ue2)FastHR_dpd(Ydpd_t,X0,B,P_bs0,P_ue2,D,fn0,lamda),P_ue(1:2));
                         [MFP_ue,~,~]=fminsearch(@(P_ue2)MFdpd(Ydpd_t,X0,B,P_bs0,P_ue2,D,fn0,lamda),FastHRP_ue);
                         FastHRerror0(simu_idx,kk2,kk1)=norm([FastHRP_ue,4]-P_ue);
                         MFerror0(simu_idx,kk2,kk1)=norm([MFP_ue,4]-P_ue);
+                        
                         %spotfi_MF
                         [spotfiMF_tau,spotfiMF_Theta]=spotfi_MFestimator(Ydpd_t,B,N_v,N_h,N_fft,delta_f,tau0,theta,N_paths,gama_H);
 %                     end
-                    
+                        %spotfi_Music
+                        [spotfi_tau,spotfi_Theta]=spotfi_estimator(Us,B,N_v,N_h,delta_f,tau0,theta,N_paths,gama_H);                    
                     %tau_music & theta_music
                     [MUSIC_tau,MUSIC_Theta]=tauTheta_MUSICestimator(Y_t,B,N_v,N_h,N_fft,delta_f,tau0,theta,N_paths,gama_H);
                     %解算abs(([spotfi_tau;MUSIC_tau]-tau0(1,:))*1e9);abs([spotfi_Theta;MUSIC_Theta]-(theta(1,:)+gama_H)/pi*180)
-                    Pos_err2(:,simu_idx,kk2,kk1)=spotfi_Location_joint1203_1([spotfi_Theta;spotfi_tau;MUSIC_Theta;MUSIC_tau;spotfiMF_Theta;spotfiMF_tau],P_bs0,P_ue);               
-%                                           [err_joint_joint;err_sperate_joint;err_AOA;err_TOA;err_jointDFT_joint]
+                    Pos_err2(:,simu_idx,kk2,kk1)=spotfi_Location_joint1203_1([spotfi_Theta;spotfi_tau;MUSIC_Theta;MUSIC_tau;...
+                        spotfiMF_Theta;spotfiMF_tau],P_bs0,P_ue);               
+                    %                   [err_joint_joint;err_sperate_joint;err_AOA;err_TOA;err_jointDFT_joint]
+                    %                   [RMSE1;RMSE2;RMSE3;sqrt(Pos_err2(:,simu_idx,kk2,kk1))]   
                 end
             end
         end
@@ -186,11 +187,12 @@ for idx=1:length(SNR)
     end
 end
 toc
-for idx=1:length(Res_tau0)
+for idx=1:length(SNR)
     figure(idx);
-    y=zeros(length(SNR),8);
-    for ii=1:length(SNR)
-        load(['..\mat\' 'performance_all_estimator' num2str(Res_aoa/pi*180) 'deg'  num2str(Res_tau0(idx)*1e9) 'ns_' 'SNR' num2str(SNR(ii)) 'dB.mat']);
+    y=zeros(length(Res_tau0),8);
+    for ii=1:length(Res_tau0)
+        
+        load(['..\mat\' 'performance_all_estimator' num2str(Res_aoa/pi*180) 'deg'  num2str(Res_tau0(ii)*1e9) 'ns_' 'SNR' num2str(SNR(idx)) 'dB.mat']);
         
         OtherRmse=zeros(size(Pos_rmse,1)*size(Pos_rmse,2),5);
         for jj=1:size(OtherRmse,2)
@@ -199,20 +201,20 @@ for idx=1:length(Res_tau0)
         end
         [x,f]=ploTcdf([MusiCrmse(:),FastHRrmse(:),OtherRmse,MFrmse(:)]);
         
-        x=x(:,[1,3,2,8,6,7,4,5]);
-        f=f(:,[1,3,2,8,6,7,4,5]);
+        x=x(:,[1,3,2,8,4,6,5,7]);
+        f=f(:,[1,3,2,8,4,6,5,7]);
         for jj=1:size(y,2)
-        y(ii,jj)=x(find(f(:,jj)>=0.9,1),jj);
-        end       
+            y(ii,jj)=x(find(f(:,jj)>=0.9,1),jj);
+        end
     end
-        semilogy(SNR.'*ones(1,size(y,2)),y,'LineWidth',2);
-        grid on;
-        xlabel('SNR/dB');
-        ylabel('error(m)@90%');
-%         title({[ 'normalizedCFO=' num2str(CFO0(ii)) '(' num2str(CFO0(ii)*delta_f) 'Hz)'];[ 'ResTau=' num2str(Res_tau0(ii)*1e9) 'ns,' 'ResAoA=' num2str(Res_aoa/pi*180) 'deg']});
-        legend('dpd-Music','Spotfi-Music','iprVdpd-MF','dpd-MF','TOA-solution','Spotfi-MF','Joint-solution','AOA-solution(MaxPower)','location','best');
-%         axis([x(1,1),0.3,0,100]);
-%         set(gca,'xtick',[.1,.2,.3]);
+    semilogy(Res_tau0.'*ones(1,size(y,2)),y,'LineWidth',2);
+    grid on;
+    xlabel('SNR/dB');
+    ylabel('error(m)@90%');
+    %         title({[ 'normalizedCFO=' num2str(CFO0(ii)) '(' num2str(CFO0(ii)*delta_f) 'Hz)'];[ 'ResTau=' num2str(Res_tau0(ii)*1e9) 'ns,' 'ResAoA=' num2str(Res_aoa/pi*180) 'deg']});
+    legend('dpd-Music','Spotfi-Music','iprVdpd-MF','dpd-MF','Joint-solution','TOA-solution','AOA-solution(MaxPower)','Spotfi-MF','location','best');
+    %         axis([x(1,1),0.3,0,100]);
+    %         set(gca,'xtick',[.1,.2,.3]);
 end
 
 

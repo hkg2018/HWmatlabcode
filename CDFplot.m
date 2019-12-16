@@ -11,8 +11,8 @@ for idx=1:length(Res_tau0)
         end
         [x,f]=ploTcdf([MusiCrmse(:),FastHRrmse(:),OtherRmse,MFrmse(:)]);
         
-        x=x(:,[1,3,2,8,7,6,4,5]);
-        f=f(:,[1,3,2,8,7,6,4,5]);
+        x=x(:,[1,3,2,8,4,6,5,7]);
+        f=f(:,[1,3,2,8,4,6,5,7]);
         
         figure;
         plot(x(:,3:7),f(:,3:7)*100,'LineWidth',2);
@@ -21,7 +21,7 @@ for idx=1:length(Res_tau0)
         ylabel('percent/%');
         axis([x(1,1),2,0,100]);
 %         title({[ 'ResTau=' num2str(Res_tau0(idx)*1e9) 'ns,' 'ResAoA=' num2str(Res_aoa/pi*180) 'deg']});
-        legend('improved dpd-MF','dpd-MF','Joint-MF','TOA-music','AOA-music','location','best');
+        legend('improved dpd-MF','dpd-MF','Joint-solution','TOA-music','AOA-music','location','best');
 %         set(gca,'xtick',[.1,.2,.3]);
     end
 end
