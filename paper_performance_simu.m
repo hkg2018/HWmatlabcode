@@ -47,7 +47,7 @@ Res_aoa=Res_aoa/180*pi;
 
 tau_idxRange=ceil((N_paths-1)/2*3);%最大时延的idx
 
-SNR=[0,5,10,20];%信噪比dB，%目前SNR定义是symbol功率与测量噪声功率之比
+SNR=[0,20];%信噪比dB，%目前SNR定义是symbol功率与测量噪声功率之比
 sigma2=10^(-174/10-3)*Bw;%1;%噪声功率，W
 Q=1;%样本数
 
@@ -118,7 +118,7 @@ for idx=1:length(SNR)
                         %             Kvec=-2*pi/lamda*[(P_ue-P_bs(nbs,:))/norm(P_ue-P_bs(nbs,:));(cos(phi(:,nbs)).*cos(gama_H(nbs)+theta(2:end,nbs))) (cos(phi(:,nbs)).*sin(gama_H(nbs)+theta(2:end,nbs))) sin(phi(:,nbs))];
                         Kvec=-2*pi/lamda*[(P_ue-P_bs0(nbs,:))/norm(P_ue-P_bs0(nbs,:));(cos(gama_H(nbs)+theta(2:end,nbs))) (sin(gama_H(nbs)+theta(2:end,nbs))) zeros(N_paths-1,1)];
                         A(:,:,nbs)=exp(1j*(Kvec*D(:,:,nbs)).');
-                        F_alpha(:,nbs)=[1,0.5+rand(1,N_paths-1)];
+                        F_alpha(:,nbs)=[1,0.5+0.6*rand(1,N_paths-1)];
                         alpha=diag(F_alpha(:,nbs))*exp(1j*rand(N_paths,1)*2*pi);
 %                         if CFO_org
 %                             CFO=CFO_org*(2*rand(1,M)-1);
