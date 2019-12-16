@@ -107,9 +107,7 @@ for idx=1:length(SNR)
                     F_alpha=ones(N_paths,N_bs);%多径系数方差衰减因子,初始化为不衰减
                     A=zeros(M,N_paths,N_bs);%多径阵列流形
                     for nbs=1:N_bs
-                        tau_idx(:,nbs)=[0 1 randperm(tau_idxRange,N_paths-2)+1];
-%                         tau_idx(2:end,nbs)=tau_idx(randperm(N_paths-1)+1,nbs);
-                        tau0(:,nbs)=diag([0 Res_tau ones(1,N_paths-2)*1e-9])*tau_idx(:,nbs)+norm(P_ue-P_bs0(nbs,:))/c;
+                        tau0(:,nbs)=[0 Res_tau 1e-9*randperm(tau_idxRange,N_paths-2)+Res_tau]+norm(P_ue-P_bs0(nbs,:))/c;
                         
                         theta_mp(:,nbs)=[gama0(nbs)-gama_H(nbs)+Res_aoa (randperm(theta_idxRange,N_paths-2)-(theta_idxRange/2))*Res_aoa];
                         theta_mp(:,nbs)=theta_mp(randperm(N_paths-1),nbs);
@@ -170,8 +168,9 @@ for idx=1:length(SNR)
                     
                     %tau_music & theta_music
                     [MUSIC_tau,MUSIC_Theta]=tauTheta_MUSICestimator(Y_t,B,N_v,N_h,N_fft,delta_f,tau0,theta,N_paths,gama_H);
-                    %解算abs(([spotfi_tau;MUSIC_tau]-tau0(1,:))*1e9);abs([spotfi_Theta;MUSIC_Theta]-theta(1,:)/pi*180)
+                    %解算abs(([spotfi_tau;MUSIC_tau]-tau0(1,:))*1e9);abs([spotfi_Theta;MUSIC_Theta]-(theta(1,:)+gama_H)/pi*180)
                     Pos_err2(:,simu_idx,kk2,kk1)=spotfi_Location_joint1203_1([spotfi_Theta;spotfi_tau;MUSIC_Theta;MUSIC_tau;spotfiMF_Theta;spotfiMF_tau],P_bs0,P_ue);               
+%                                           [err_joint_joint;err_sperate_joint;err_AOA;err_TOA;err_jointDFT_joint]
                 end
             end
         end

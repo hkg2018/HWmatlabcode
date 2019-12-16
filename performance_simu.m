@@ -107,9 +107,7 @@ for idx=1:length(Res_tau0)
                     F_alpha=ones(N_paths,N_bs);%多径系数方差衰减因子,初始化为不衰减
                     A=zeros(M,N_paths,N_bs);%多径阵列流形
                     for nbs=1:N_bs
-                        tau_idx(:,nbs)=[0 1 randperm(tau_idxRange,N_paths-2)+1];
-%                         tau_idx(2:end,nbs)=tau_idx(randperm(N_paths-1)+1,nbs);
-                        tau0(:,nbs)=diag([0 Res_tau ones(1,N_paths-2)*1e-9])*tau_idx(:,nbs)+norm(P_ue-P_bs0(nbs,:))/c;
+                        tau0(:,nbs)=[0 Res_tau 1e-9*randperm(tau_idxRange,N_paths-2)+Res_tau]+norm(P_ue-P_bs0(nbs,:))/c;
                         
                         theta_mp(:,nbs)=[gama0(nbs)-gama_H(nbs)+Res_aoa (randperm(theta_idxRange,N_paths-2)-(theta_idxRange/2))*Res_aoa];
                         theta_mp(:,nbs)=theta_mp(randperm(N_paths-1),nbs);
