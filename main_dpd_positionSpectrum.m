@@ -34,8 +34,8 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 N_paths=6;%多径数量（含首径）
-Res_aoa=2;%多径角度间隔
-Res_tau=8e-9;%时延间隔
+Res_aoa=1;%多径角度间隔
+Res_tau=1e-9;%时延间隔
 
 delta_f=120e3*8;%OFDM频率间隔
 N_fft=2048/8;%FFT点数
@@ -67,10 +67,10 @@ tt=(0:N_fft-1)*Ts;%BS时间轴，单位秒
 X=sqrt(10^(SNR/10)*sigma2)*ones(N_ofdm,Q);%信道测试序列   %exp(1j*2*pi*rand(N_ofdm,Q))随机导频序列;
 B=DFTcodebook_spotfimuci_1204(N_v,N_h);%eye(M);单通道正交波束码本
 %% 生成接收信号
-xx=10;%0.5:1.5:29.5
-yy=9;%0.5:0.5:9.5场景网格
+xx=15;%0.5:1.5:29.5
+yy=15;%0.5:0.5:9.5场景网格
 N_simu=1;
-LenFreWindow=fix(N_fft*1);
+LenFreWindow=fix(N_fft*0.25);
 Qf=N_fft-LenFreWindow+1;
 error1=zeros(length(yy),length(xx),N_simu);
 RMSE1=zeros(length(yy),length(xx));
@@ -105,18 +105,18 @@ for kk1=1:length(xx)
             A=zeros(M,N_paths,N_bs);%多径阵列流形
 
             for nbs=1:N_bs
-                tau_idx(:,nbs)=[0 1 randperm(tau_idxRange,N_paths-2)+1];
                 %                 tau_idx(2:end,nbs)=tau_idx(randperm(N_mp-1)+1,nbs);
-                tau0(:,nbs)=diag([0 Res_tau ones(1,N_paths-2)*1e-9])*tau_idx(:,nbs)+norm(P_ue-P_bs0(nbs,:))/c;
+                tau0(:,nbs)=[0 Res_tau 1e-9*randperm(tau_idxRange,N_paths-2)+Res_tau]+norm(P_ue-P_bs0(nbs,:))/c;
                 
                 theta_mp(:,nbs)=[gama0(nbs)-gama_H(nbs)+Res_aoa (randperm(theta_idxRange,N_paths-2)-(theta_idxRange/2))*Res_aoa];
                 theta_mp(:,nbs)=theta_mp(randperm(N_paths-1),nbs);
                 theta(:,nbs)=[gama0(nbs)-gama_H(nbs);theta_mp(:,nbs)];
+%                 theta/pi*180
                 
                 %             Kvec=-2*pi/lamda*[(P_ue-P_bs(nbs,:))/norm(P_ue-P_bs(nbs,:));(cos(phi(:,nbs)).*cos(gama_H(nbs)+theta(2:end,nbs))) (cos(phi(:,nbs)).*sin(gama_H(nbs)+theta(2:end,nbs))) sin(phi(:,nbs))];
                 Kvec=-2*pi/lamda*[(P_ue-P_bs0(nbs,:))/norm(P_ue-P_bs0(nbs,:));(cos(gama_H(nbs)+theta(2:end,nbs))) (sin(gama_H(nbs)+theta(2:end,nbs))) zeros(N_paths-1,1)];
                 A(:,:,nbs)=exp(1j*(Kvec*D(:,:,nbs)).');
-                F_alpha(:,nbs)=[1,0.5+rand(1,N_paths-1)];
+                F_alpha(:,nbs)=[1,0.6+0.6*rand(1,N_paths-1)];
                 alpha=diag(F_alpha(:,nbs))*exp(1j*rand(N_paths,1)*2*pi);
                 if CFO0
                     CFO=CFO0*(2*rand(1,M)-1); 
@@ -176,7 +176,7 @@ J_MLdpd=zeros(length(yy),length(xx));
 
 for kk1=1:length(xx)
     for kk2=1:length(yy)
-        J_MLdpd(kk2,kk1)=-toaMLdpd(Ydpd_t,X0,B,P_bs,[xx(kk1),yy(kk2)],D,fn0,lamda);
+        J_MLdpd(kk2,kk1)=-MFdpd(Ydpd_t,X0,B,P_bs,[xx(kk1),yy(kk2)],D,fn0,lamda);
         J_FastHRdpd(kk2,kk1)=-FastHR_dpd(Ydpd_t,X0,B,P_bs,[xx(kk1),yy(kk2)],D,fn0,lamda);
     end
 end
