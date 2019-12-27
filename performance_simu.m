@@ -52,7 +52,7 @@ sigma2=10^(-174/10-3)*Bw;%1;%噪声功率，W
 Q=1;%样本数
 
 %非理想因素
-CFO0=[0.0005,0.001,0.01];%归一化载波频率偏差
+CFO0=0;%归一化载波频率偏差
 CFO=zeros(1,M);
 STO=0;%采样定时偏差
 SFO=0;%采样频率频差导致的采样周期偏差0.6e-9/10e-3
@@ -131,7 +131,7 @@ for idx=1:length(Res_tau0)
                             for nmp=1:N_paths
                                 H0=H0+alpha(nmp)*A(:,nmp,nbs)*exp(-1j*2*pi*fn0(k)*tau0(nmp,nbs));
                             end
-                            Yt0=diag(exp(1j*2*pi*fix((k-1)/8)*CFO))*B*H0*X0(k,:);
+                            Yt0=diag(exp(1j*2*pi*CFO))*B*H0*X0(k,:);
                             Ydpd_t((k-1)*M+1:k*M,:,nbs)=Yt0;
                             Y_t(:,:,k,nbs)=Yt0+wgn(M,Q,sigma2,'linear','complex');
                         end
